@@ -5,6 +5,7 @@ from tkinter import *
 from tkinter import ttk
 import time
 from tkinter import messagebox
+from twilio.rest import Client
 import random
 from PIL import ImageTk, Image
 
@@ -51,6 +52,64 @@ def warningPin():
         start()
     else:
         root.quit()
+
+# OTP Verification
+def verifyOTP():
+    failedText.pack_forget()
+    OTPText.pack_forget()
+    OTPNumInput.pack_forget()
+    OTPsubmitButton.pack_forget()
+
+    processingText = Label(root, text="Verifying OTP Code")
+    processing = ttk.Progressbar(root, orient=HORIZONTAL, length=300, mode="indeterminate")
+    # Showing in the Screen
+    processingText.pack(pady=20)
+    processing.pack()
+    processing.start(10)
+
+    # Matching OTP
+    if otp == int(OTPNumInput.get()):
+        processingText.pack_forget()
+        processing.pack_forget()
+        processing.after(1000, update)
+    else:
+        # Set error message to invalid OTP
+        processing.after(1000, warningOTP)
+
+# Asking for OTP
+def callOTP():
+    processing.pack_forget()
+    processingText.pack_forget()
+
+    global failedText
+    global OTPText
+    global OTPNumInput
+    global OTPsubmitButton
+    global otp
+
+
+    # Generate and Send OTP
+    account_sid = 'ACa8fb8c7baa8a46dd1e36c2c7631364ab' # SID is being removed for security
+    auth_token = '5063a35ec819bce8a531245e7cb724fe' # Token is being removed for security
+    client = Client(account_sid, auth_token)
+    otp = random.randint(100000, 999999)
+    mobile = '+18147523077' # Number is being removed for security
+    sms = client.messages.create(
+        body='Please enter this OTP to continue. Your OTP is - ' + str(otp),
+        from_='+18147523077',
+        to= str(contactNumber)
+    )
+    sms.sid
+
+
+    failedText = Label(root, text="Face Recognition Failed", fg="red")
+    OTPText = Label(root, text="Enter Your OTP Code")
+    OTPNumInput = Entry(root, width=50, borderwidth=2)
+    OTPsubmitButton = Button(root, text="Log In", width=20, height=2, bg="#2d5cf7", fg="white", command=verifyOTP)
+    failedText.pack(pady=30)
+    OTPText.pack(pady=10)
+    OTPNumInput.pack()
+    OTPsubmitButton.pack(pady=10)
 
 #Face Authentication
 def faceAuthentication():
@@ -197,7 +256,7 @@ def next():
                     processing.after(1000, update)
                 else:
                     # Set error message to face not matched
-                    processing.after(1000,"Error")
+                    processing.after(1000, callOTP)
             else:
                 # Set error message to face not matched
                 processing.after(1000, warningUnkownFace)
